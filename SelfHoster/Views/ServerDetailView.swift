@@ -108,21 +108,11 @@ struct NodeRowView: View {
             VStack(alignment: .leading) {
                 Text(node.name)
                     .font(.headline)
-                Text("CPU: \(cpuPercentage)% | Mem: \(memoryPercentage)%")
+                Text("CPU: \(node.cpuPercentage)% | Mem: \(node.memoryPercentage)%")
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
         }
-    }
-    
-    private var cpuPercentage: String {
-        guard let cpu = node.cpu else { return "0" }
-        return String(format: "%.1f", cpu * 100)
-    }
-    
-    private var memoryPercentage: String {
-        guard let mem = node.mem, let maxMem = node.maxmem, maxMem > 0 else { return "0" }
-        return String(format: "%.1f", (Double(mem) / Double(maxMem)) * 100)
     }
 }
 
@@ -137,11 +127,11 @@ struct VMRowView: View {
     
     var body: some View {
         HStack {
-            Image(systemName: vm.status == "running" ? "play.circle.fill" : "stop.circle.fill")
-                .foregroundColor(vm.status == "running" ? .green : .gray)
+            Image(systemName: vm.isRunning ? "play.circle.fill" : "stop.circle.fill")
+                .foregroundColor(vm.isRunning ? .green : .gray)
             
             VStack(alignment: .leading) {
-                Text(vm.name ?? "VM \(vm.vmid)")
+                Text(vm.displayName)
                     .font(.headline)
                 Text("ID: \(vm.vmid) • \(vm.status.capitalized)")
                     .font(.caption)
@@ -150,7 +140,7 @@ struct VMRowView: View {
             
             Spacer()
             
-            if vm.status == "running" {
+            if vm.isRunning {
                 Button(action: openTerminal) {
                     Image(systemName: "terminal")
                 }
@@ -210,11 +200,11 @@ struct ContainerRowView: View {
     
     var body: some View {
         HStack {
-            Image(systemName: container.status == "running" ? "play.circle.fill" : "stop.circle.fill")
-                .foregroundColor(container.status == "running" ? .green : .gray)
+            Image(systemName: container.isRunning ? "play.circle.fill" : "stop.circle.fill")
+                .foregroundColor(container.isRunning ? .green : .gray)
             
             VStack(alignment: .leading) {
-                Text(container.name ?? "CT \(container.vmid)")
+                Text(container.displayName)
                     .font(.headline)
                 Text("ID: \(container.vmid) • \(container.status.capitalized)")
                     .font(.caption)
@@ -223,7 +213,7 @@ struct ContainerRowView: View {
             
             Spacer()
             
-            if container.status == "running" {
+            if container.isRunning {
                 Button(action: stopContainer) {
                     if isStopping {
                         ProgressView()
@@ -274,21 +264,21 @@ struct NodeDetailView: View {
                 HStack {
                     Text("CPU Usage")
                     Spacer()
-                    Text("\(cpuPercentage)%")
+                    Text("\(node.cpuPercentage)%")
                         .foregroundColor(.secondary)
                 }
                 
                 HStack {
                     Text("Memory")
                     Spacer()
-                    Text("\(memoryUsage) / \(maxMemoryUsage) GB")
+                    Text("\(node.memoryUsageGB) / \(node.maxMemoryGB) GB")
                         .foregroundColor(.secondary)
                 }
                 
                 HStack {
                     Text("Disk")
                     Spacer()
-                    Text("\(diskUsage) / \(maxDiskUsage) GB")
+                    Text("\(node.diskUsageGB) / \(node.maxDiskGB) GB")
                         .foregroundColor(.secondary)
                 }
             }
@@ -304,44 +294,12 @@ struct NodeDetailView: View {
                 HStack {
                     Text("Uptime")
                     Spacer()
-                    Text(uptimeString)
+                    Text(node.uptimeString)
                         .foregroundColor(.secondary)
                 }
             }
         }
         .navigationTitle(node.name)
-    }
-    
-    private var cpuPercentage: String {
-        guard let cpu = node.cpu else { return "0" }
-        return String(format: "%.1f", cpu * 100)
-    }
-    
-    private var memoryUsage: String {
-        guard let mem = node.mem else { return "0" }
-        return String(format: "%.1f", Double(mem) / 1024 / 1024 / 1024)
-    }
-    
-    private var maxMemoryUsage: String {
-        guard let maxMem = node.maxmem else { return "0" }
-        return String(format: "%.1f", Double(maxMem) / 1024 / 1024 / 1024)
-    }
-    
-    private var diskUsage: String {
-        guard let disk = node.disk else { return "0" }
-        return String(format: "%.1f", Double(disk) / 1024 / 1024 / 1024)
-    }
-    
-    private var maxDiskUsage: String {
-        guard let maxDisk = node.maxdisk else { return "0" }
-        return String(format: "%.1f", Double(maxDisk) / 1024 / 1024 / 1024)
-    }
-    
-    private var uptimeString: String {
-        guard let uptime = node.uptime else { return "Unknown" }
-        let days = uptime / 86400
-        let hours = (uptime % 86400) / 3600
-        return "\(days)d \(hours)h"
     }
 }
 
